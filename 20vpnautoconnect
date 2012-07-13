@@ -1,0 +1,76 @@
+#autoconnect
+##
+## FILE: 20vpnautoconnect
+##
+## DESCRIPTION: Script for networkdispatcher.d to autoconnect to VPN
+##
+## AUTHOR: balu
+##
+## DATE: 19.02.2012
+## 
+## VERSION: 0.3
+##
+## INITIALISIERUNG:
+#Diese Werte kommen vom NetworkManager
+INTERFACE=$1
+ACTION=$2
+ 
+##Name der VPN verbindung im Netzwerkmanager
+VPN_CONNECTION_NAME="vpnName"
+ 
+ 
+## Interface bei welchen vpn in frage kommt ( mehrere mit Leerzeichen getrennt )
+INTERFACES=(wlan0)
+ 
+## ESSID der Netzte die kein VPN brauchen
+ESSIDS_KEIN_VPN=( Essid1 Essid2 )
+ 
+ 
+##---- do not edit below here ---- ##
+# @param $1 mixed  Needle  
+# @param $2 array  Haystack
+# @return  Success (1) if value exists, Failure(0) otherwise
+# Usage: in_array "$needle" "${haystack[@]}"
+in_array() {
+    local hay needle=$1
+    shift
+    for hay; do
+        [[ $hay == $needle ]] && return 1
+    done
+    return 0
+}
+ 
+#wenn uns das interface überhaupt interessiert
+in_array $INTERFACE "${INTERFACES[@]}"
+if [ $? -eq 1 ]; then
+ 
+ 
+    ## ESSID des verbundenen Netzwerks bestimmen
+    ESSID=$(iwconfig $INTERFACE | grep ESSID | cut -d":" -f2 | sed -e 's/"//g')
+    in_array $ESSID "${ESSIDS_KEIN_VPN[@]}"
+    if [ $? -ne 1 ]; then
+ 
+## Funktionen durchführen, je nach Aktion eine andere
+case "${ACTION}" in
+        up)
+        nmcli con up id "${VPN_CONNECTION_NAME}"
+        ;;
+ 
+        down)
+                nmcli con down id "${VPN_CONNECTION_NAME}"
+        #killall vpnc
+                ;;
+ 
+        pre-up)
+                ;;
+ 
+        post-down)
+                ;;
+ 
+        *)
+                echo $"Usage: $0 {up|down|pre-up|post-down}"
+                exit 1
+esac
+ 
+    fi
+fi
