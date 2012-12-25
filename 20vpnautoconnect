@@ -53,13 +53,19 @@ if [ $? -eq 1 ]; then
 ## Funktionen durchführen, je nach Aktion eine andere
 case "${ACTION}" in
         up)
-                #iptables foo
+                #pre-up
                 nmcli con up id "${VPN_CONNECTION_NAME}"
         ;;
         down)
                 nmcli con down id "${VPN_CONNECTION_NAME}"
-                #iptables foo
+                #post-down
                 ;;
+        vpn-up)
+                #runs after vpn conn has been brought up
+        ;;
+        vpn-down)
+                #runs after vpn conn has been brought down
+        ;;
         *)
                 echo $"Usage: $0 {up|down|pre-up|post-down}"
                 exit 1
